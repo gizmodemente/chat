@@ -14,11 +14,13 @@ class ChatActor(chatName: String) extends Actor with ActorLogging{
   val messages = scala.collection.mutable.SortedMap[String, String]()
 
   override def receive: Receive = {
-    case JoinChat(userId) => users + userId -> sender()
+    case JoinChat(userId) => log.info("User {} join to channel", userId)
+      users += userId -> sender()
       sender() ! Joined(chatName)
-    case ChatMessage(userId, message) =>
+    case ChatMessage(userId, message, chat) =>
+      log.info("Received Message from user {}", userId)
       messages + userId -> message
-      users foreach (x => x._2 ! ChatMessage(userId, message.toUpperCase))
+      users foreach (x => x._2 ! ChatMessage(userId, message.toUpperCase, chatName))
     case LeaveChat(userId) =>
       log.info("User {} has left the building", userId)
       users remove userId
