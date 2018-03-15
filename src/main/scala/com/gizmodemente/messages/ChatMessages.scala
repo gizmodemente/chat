@@ -8,6 +8,7 @@ object ChatMessages {
   final case class NewChat(chatName: String, chat: ActorRef)
   final case class RequestNewChat(chatName: String)
   final case class JoinChat(userId: String)
+  final case class JoinToChat(chatName: String)
   final case class RefusedChat(chatName: String, reason: String)
   final case class ChatMessage(userId: String, message: String, chatName: String)
   final case class LeaveChat(userId: String)
@@ -16,4 +17,5 @@ object ChatMessages {
   final case class CurrentChats(chats: List[String])
   final case class RemoveChat(chatName: String)
   final case class CreateUser(userId: String)
+  final case class GetChatRef(chatName: String)
 }

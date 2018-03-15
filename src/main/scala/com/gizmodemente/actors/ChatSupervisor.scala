@@ -16,7 +16,7 @@ class ChatSupervisor extends Actor with ActorLogging {
   override def preStart(): Unit = log.info("Chat Application started")
   override def postStop(): Unit = log.info("Chat Application stopped")
 
-  val connectedUsers = mutable.ListBuffer[ActorRef]()
+  val connectedUsers = mutable.SortedMap[String, ActorRef]()
   val activeChats = mutable.SortedMap[String, ActorRef]()
 
   override def receive: Receive = {
@@ -32,6 +32,9 @@ class ChatSupervisor extends Actor with ActorLogging {
         activeChats.remove(chatName)
       } else log.info("Chat {} doesn't exists", chatName)
     case CreateUser(userId) => log.info("Creating user actor for {}", userId)
-      sender() ! context.actorOf(UserActor.props(userId))
+      val newUser: ActorRef = context.actorOf(UserActor.props(userId))
+      connectedUsers += userId -> newUser
+      sender() ! newUser
+    case GetChatRef(chatName) => sender() ! activeChats(chatName)
   }
 }

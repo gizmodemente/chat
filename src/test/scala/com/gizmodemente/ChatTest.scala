@@ -68,6 +68,11 @@ class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender wit
       val userActor = Await.result(userActorFuture.mapTo[ActorRef], timeout.duration)
       userActor ! RequestNewChat("Test Chat")
       Thread.sleep(1000)
+      val userActorFuture2 = supervisor ? CreateUser("TestUser2")
+      val userActor2 = Await.result(userActorFuture2.mapTo[ActorRef], timeout.duration)
+      Thread.sleep(1000)
+      userActor2 ! JoinToChat("Test Chat")
+      Thread.sleep(1000)
       userActor ! NewMessage("Hello Test", "Test Chat")
       Thread.sleep(1000)
     }
