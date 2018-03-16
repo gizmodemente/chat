@@ -13,6 +13,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Random
+import scala.language.postfixOps
 
 class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender with WordSpecLike
   with Matchers with BeforeAndAfterAll {
