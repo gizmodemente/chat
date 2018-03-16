@@ -1,8 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Java template
 # Compiled class file
-*.class
-
 # Log file
 *.log
 
@@ -16,7 +14,6 @@
 *.jar
 *.war
 *.ear
-*.zip
 *.tar.gz
 *.rar
 
@@ -32,7 +29,6 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
-.history
 .cache
 .lib/
 ### JetBrains template
@@ -40,7 +36,6 @@ project/plugins/project/
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff:
-.idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/dictionaries
 
@@ -55,8 +50,6 @@ project/plugins/project/
 
 # Gradle:
 .idea/**/gradle.xml
-.idea/**/libraries
-
 # CMake
 cmake-build-debug/
 cmake-build-release/
@@ -86,7 +79,5 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
-### Scala template
-*.class
-*.log
 
+/.idea/

@@ -1,7 +1,7 @@
 package com.gizmodemente.actors.chat
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import com.gizmodemente.messages.ChatMessages.{ChatMessage, JoinChat, Joined, LeaveChat}
+import com.gizmodemente.messages.ChatMessages._
 
 import scala.collection.mutable
 
@@ -27,6 +27,7 @@ class ChatActor(chatName: String) extends Actor with ActorLogging{
       } else log.error("Chat {} has received a message for chat {}", chatName, chat)
     case LeaveChat(userId) =>
       log.info("User {} has left the building", userId)
+      users(userId) ! ChatLeft(chatName)
       users remove userId
     case _ => log.error("Unexpected Message")
   }

@@ -1,11 +1,16 @@
 package com.gizmodemente.actors
 
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
+import java.util.concurrent.TimeoutException
+
+import akka.actor.SupervisorStrategy.{Escalate, Resume}
+import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, PoisonPill, Props}
 import com.gizmodemente.actors.chat.ChatActor
 import com.gizmodemente.actors.user.UserActor
 import com.gizmodemente.messages.ChatMessages._
 
 import scala.collection.mutable
+import scala.concurrent.duration._
+import scala.language.postfixOps
 
 object ChatSupervisor {
   def props(): Props = Props(new ChatSupervisor)
@@ -36,7 +41,9 @@ class ChatSupervisor extends Actor with ActorLogging {
       connectedUsers += userId -> newUser
       sender() ! newUser
     case GetChatRef(chatName) => log.info("Getting chat reference for {}", chatName)
-      sender() ! activeChats(chatName)
+      if(activeChats isDefinedAt chatName)
+        sender() ! activeChats(chatName)
+      else log.error("Chat {} doesn't exists", chatName)
     case ListUsers() => log.info("Listing all users")
       sender() ! connectedUsers.keySet.toList
     case UserLeft(userId) => log.info("User {} disconnect", userId)
@@ -45,4 +52,10 @@ class ChatSupervisor extends Actor with ActorLogging {
         connectedUsers remove userId
       } else log.error("Can't disconnect user {} because is not registered", userId)
   }
+
+  override val supervisorStrategy: OneForOneStrategy =
+    OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1 minute) {
+      case _: TimeoutException => Resume
+      case _: Exception => Escalate
+    }
 }

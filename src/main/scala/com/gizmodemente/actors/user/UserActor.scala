@@ -8,6 +8,7 @@ import com.gizmodemente.messages.ChatMessages._
 import scala.collection.mutable
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 object UserActor {
   def props(userId: String): Props = Props(new UserActor(userId))
@@ -43,6 +44,8 @@ class UserActor(userId: String) extends Actor with ActorLogging{
       implicit val timeout: Timeout = Timeout(1 seconds)
       val future = context.parent ? GetChatRef(chatName)
       Await.result(future.mapTo[ActorRef], timeout.duration) ! JoinChat(userId)
+    case ChatLeft(chatName) => log.info("Removing chat {} for user {}", chatName, userId)
+      chatsJoined remove chatName
     case _ => log.error("Unexpected Message")
   }
 }

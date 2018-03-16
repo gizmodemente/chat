@@ -20,4 +20,5 @@ object ChatMessages {
   final case class CreateUser(userId: String)
   final case class GetChatRef(chatName: String)
   final case class UserLeft(userId: String)
+  final case class ChatLeft(chatName: String)
 }
