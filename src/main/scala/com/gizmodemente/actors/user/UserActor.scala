@@ -6,8 +6,8 @@ import akka.util.Timeout
 import com.gizmodemente.messages.ChatMessages._
 
 import scala.collection.mutable
-import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 object UserActor {
   def props(userId: String): Props = Props(new UserActor(userId))
@@ -15,14 +15,14 @@ object UserActor {
 
 class UserActor(userId: String) extends Actor with ActorLogging{
 
-  val chatsJoined = mutable.SortedMap[String, ActorRef]()
+  val chatsJoined: mutable.SortedMap[String, ActorRef] = mutable.SortedMap[String, ActorRef]()
 
   override def receive: Receive = {
     case ChatMessage(userName, message, chatName) =>
       // In first approach only prints message with chat name
-      println(if (chatsJoined.keySet.contains(chatName)) chatName
-      else "Unknown chat - " + chatName)
-      println(userName + ": " + message)
+      println(if (chatsJoined.keySet.contains(chatName)) "[" + userId + "] " + chatName
+        else "[" + userId + "] " + "Unknown chat - " + chatName)
+      println("[" + userId + "] " + userName + ": " + message)
     case RequestNewChat(chatName) => log.info("Requesting a new chat")
       context.parent ! CreateChat(userId, chatName)
     case NewChat(chatName, chat) =>
@@ -40,10 +40,9 @@ class UserActor(userId: String) extends Actor with ActorLogging{
         chatsJoined(chatName) ! ChatMessage(userId, message, chatName)
       } else log.error("User {} is not joined to Chat {}", userId, chatName)
     case JoinToChat(chatName) => log.info("Trying to join chat {}", chatName)
-      implicit val timeout = Timeout(1 seconds)
+      implicit val timeout: Timeout = Timeout(1 seconds)
       val future = context.parent ? GetChatRef(chatName)
-      val chatActor = Await.result(future.mapTo[ActorRef], timeout.duration)
-      chatActor ! JoinChat(userId)
+      Await.result(future.mapTo[ActorRef], timeout.duration) ! JoinChat(userId)
     case _ => log.error("Unexpected Message")
   }
 }

@@ -16,11 +16,11 @@ class ChatSupervisor extends Actor with ActorLogging {
   override def preStart(): Unit = log.info("Chat Application started")
   override def postStop(): Unit = log.info("Chat Application stopped")
 
-  val connectedUsers = mutable.SortedMap[String, ActorRef]()
-  val activeChats = mutable.SortedMap[String, ActorRef]()
+  val connectedUsers: mutable.SortedMap[String, ActorRef] = mutable.SortedMap[String, ActorRef]()
+  val activeChats: mutable.SortedMap[String, ActorRef] = mutable.SortedMap[String, ActorRef]()
 
   override def receive: Receive = {
-    case CreateChat(userId, chatName) => log.info("Creating chat {}", chatName)
+    case CreateChat(userId, chatName) => log.info("Creating chat {} by user {}", chatName, userId)
       activeChats += (chatName -> context.actorOf(ChatActor.props(chatName)))
       sender() ! NewChat(chatName, activeChats(chatName))
     case ListChats() => log.info("Listing all chats")
@@ -35,6 +35,14 @@ class ChatSupervisor extends Actor with ActorLogging {
       val newUser: ActorRef = context.actorOf(UserActor.props(userId))
       connectedUsers += userId -> newUser
       sender() ! newUser
-    case GetChatRef(chatName) => sender() ! activeChats(chatName)
+    case GetChatRef(chatName) => log.info("Getting chat reference for {}", chatName)
+      sender() ! activeChats(chatName)
+    case ListUsers() => log.info("Listing all users")
+      sender() ! connectedUsers.keySet.toList
+    case UserLeft(userId) => log.info("User {} disconnect", userId)
+      if(connectedUsers.isDefinedAt(userId)) {
+        connectedUsers(userId) ! PoisonPill
+        connectedUsers remove userId
+      } else log.error("Can't disconnect user {} because is not registered", userId)
   }
 }

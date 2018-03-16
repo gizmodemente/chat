@@ -3,15 +3,17 @@ package com.gizmodemente.actors.chat
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.gizmodemente.messages.ChatMessages.{ChatMessage, JoinChat, Joined, LeaveChat}
 
+import scala.collection.mutable
+
 object ChatActor {
   def props(chatName: String): Props = Props(new ChatActor(chatName))
 }
 
 class ChatActor(chatName: String) extends Actor with ActorLogging{
 
-  val users = scala.collection.mutable.SortedMap[String, ActorRef]()
+  val users: mutable.SortedMap[String, ActorRef] = scala.collection.mutable.SortedMap[String, ActorRef]()
 
-  val messages = scala.collection.mutable.SortedMap[String, String]()
+  val messages: mutable.SortedMap[String, String] = scala.collection.mutable.SortedMap[String, String]()
 
   override def receive: Receive = {
     case JoinChat(userId) => log.info("User {} join to channel", userId)
@@ -19,8 +21,10 @@ class ChatActor(chatName: String) extends Actor with ActorLogging{
       sender() ! Joined(chatName)
     case ChatMessage(userId, message, chat) =>
       log.info("Received Message from user {}", userId)
-      messages + userId -> message
-      users foreach (x => x._2 ! ChatMessage(userId, message.toUpperCase, chatName))
+      if(chat.eq(chatName)) {
+        messages + userId -> message
+        users foreach (x => x._2 ! ChatMessage(userId, message.toUpperCase, chatName))
+      } else log.error("Chat {} has received a message for chat {}", chatName, chat)
     case LeaveChat(userId) =>
       log.info("User {} has left the building", userId)
       users remove userId

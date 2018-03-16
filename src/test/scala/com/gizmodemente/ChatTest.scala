@@ -1,9 +1,9 @@
 package com.gizmodemente
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
-import akka.pattern.ask
 import com.gizmodemente.actors.ChatSupervisor
 import com.gizmodemente.actors.chat.ChatActor
 import com.gizmodemente.actors.user.UserActor
@@ -12,6 +12,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Random
 
 class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender with WordSpecLike
   with Matchers with BeforeAndAfterAll {
@@ -20,22 +21,17 @@ class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender wit
     TestKit.shutdownActorSystem(system)
   }
 
-  val user = system.actorOf(UserActor.props("TestUser"))
-  val chat = system.actorOf(ChatActor.props("TestChat"))
-  val supervisor = system.actorOf(ChatSupervisor.props())
+  val user: ActorRef = system.actorOf(UserActor.props("TestUser"))
+  val chat: ActorRef = system.actorOf(ChatActor.props("TestChat"))
+  val supervisor: ActorRef = system.actorOf(ChatSupervisor.props())
 
   "A User" must {
-    "Create a Chat" in {
-      user ! CreateChat("TestUser", "TestChat")
-      expectNoMessage(1.second)
-    }
-
-    "Receive a Chat Message" in {
+    "Receive a chat message" in {
       user ! ChatMessage("Friend", "Hello Friend", "TestChat")
       expectNoMessage(1.second)
     }
 
-    "Join a Chat" in {
+    "Join a chat" in {
       chat ! JoinChat("TestChat")
       expectMsg(Joined("TestChat"))
     }
@@ -63,7 +59,7 @@ class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender wit
       expectNoMessage(1.second)
     }
     "Create a user that create a chat and send message to this chat" in {
-      implicit val timeout = Timeout(1 seconds)
+      implicit val timeout: Timeout = Timeout(1 seconds)
       val userActorFuture = supervisor ? CreateUser("TestUser")
       val userActor = Await.result(userActorFuture.mapTo[ActorRef], timeout.duration)
       userActor ! RequestNewChat("Test Chat")
@@ -75,6 +71,23 @@ class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender wit
       Thread.sleep(1000)
       userActor ! NewMessage("Hello Test", "Test Chat")
       Thread.sleep(1000)
+      supervisor ! UserLeft("TestUser")
+      supervisor ! UserLeft("TestUser2")
+    }
+    "List connected users" in {
+      val bound: Int = new Random().nextInt(150)
+
+      for(x <- 1 to bound)
+        supervisor ! CreateUser("TestUser" + x)
+
+      implicit val timeout: Timeout = Timeout(1 seconds)
+      val future = supervisor ? ListUsers()
+      val users = Await.result(future.mapTo[List[String]], timeout.duration)
+
+      users.size shouldBe bound
+
+      for(user <- users)
+        supervisor ! UserLeft(user)
     }
   }
 }

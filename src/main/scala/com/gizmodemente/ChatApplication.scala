@@ -11,7 +11,7 @@ class ChatApplication {
     val system = ActorSystem("chat-system")
 
     try {
-      val supervisor = system.actorOf(ChatSupervisor.props() , "chat-supervisor")
+      system.actorOf(ChatSupervisor.props() , "chat-supervisor")
 
       StdIn.readLine()
 

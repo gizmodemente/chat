@@ -14,8 +14,10 @@ object ChatMessages {
   final case class LeaveChat(userId: String)
   final case class Joined(chatName: String)
   final case class ListChats()
+  final case class ListUsers()
   final case class CurrentChats(chats: List[String])
   final case class RemoveChat(chatName: String)
   final case class CreateUser(userId: String)
   final case class GetChatRef(chatName: String)
+  final case class UserLeft(userId: String)
 }
