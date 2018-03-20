@@ -24,7 +24,7 @@ class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender wit
 
   val user: ActorRef = system.actorOf(UserActor.props("TestUser"))
   val chat: ActorRef = system.actorOf(ChatActor.props("TestChat"))
-  val supervisor: ActorRef = system.actorOf(ChatSupervisor.props())
+  val supervisor: ActorRef = system.actorOf(ChatSupervisor.props(), "supervisor")
 
   "A User" must {
     "Receive a chat message" in {

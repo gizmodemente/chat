@@ -37,7 +37,8 @@ class ChatSupervisor extends Actor with ActorLogging {
         activeChats.remove(chatName)
       } else log.info("Chat {} doesn't exists", chatName)
     case CreateUser(userId) => log.info("Creating user actor for {}", userId)
-      val newUser: ActorRef = context.actorOf(UserActor.props(userId))
+      val newUser: ActorRef = context.actorOf(UserActor.props(userId), "user-" + generateActorName)
+//      context.actorSelection("user-*") ! ChatMessage("system", "Connected user " + userId, "general")
       connectedUsers += userId -> newUser
       sender() ! newUser
     case GetChatRef(chatName) => log.info("Getting chat reference for {}", chatName)
@@ -58,4 +59,16 @@ class ChatSupervisor extends Actor with ActorLogging {
       case _: TimeoutException => Resume
       case _: Exception => Escalate
     }
+
+  def generateActorName: String = {
+    val sb: mutable.StringBuilder = new mutable.StringBuilder
+    val chars = ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')
+
+    for(i <- 1 to 8) {
+      val randomNum = util.Random.nextInt(chars.length)
+      sb.append(chars(randomNum))
+    }
+    sb.toString()
+  }
+
 }
