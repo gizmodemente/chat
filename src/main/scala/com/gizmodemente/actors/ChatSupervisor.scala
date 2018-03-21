@@ -24,10 +24,6 @@ class ChatSupervisor extends Actor with ActorLogging {
   val connectedUsers: mutable.SortedMap[String, String] = mutable.SortedMap[String, String]()
   val activeChats: mutable.SortedMap[String, String] = mutable.SortedMap[String, String]()
 
-  override def aroundPreStart(): Unit = {
-    log.info("Hello, i'm {} and you cand find me in {}", self.toString(), self.path.toStringWithoutAddress)
-  }
-
   override def receive: Receive = {
     case CreateChat(userId, chatName) => log.info("Creating chat {} by user {}", chatName, userId)
       activeChats += (chatName -> context.actorOf(ChatActor.props(chatName)).path.toStringWithoutAddress)

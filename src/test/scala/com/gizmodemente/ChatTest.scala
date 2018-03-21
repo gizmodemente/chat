@@ -78,7 +78,7 @@ class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender wit
       supervisor ! UserLeft("TestUser2")
     }
     "List connected users" in {
-      val bound: Int = new Random().nextInt(150)
+      val bound: Int = new Random().nextInt(1500)
 
       for(x <- 1 to bound)
         supervisor ! CreateUser("TestUser" + x)
