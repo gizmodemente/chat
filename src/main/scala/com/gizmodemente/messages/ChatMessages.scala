@@ -1,11 +1,9 @@
 package com.gizmodemente.messages
 
-import akka.actor.ActorRef
-
 object ChatMessages {
   final case class NewMessage(message: String, chatName: String)
   final case class CreateChat(userId: String, chatName: String)
-  final case class NewChat(chatName: String, chat: ActorRef)
+  final case class NewChat(chatName: String, chat: String)
   final case class RequestNewChat(chatName: String)
   final case class JoinChat(userId: String)
   final case class JoinToChat(chatName: String)

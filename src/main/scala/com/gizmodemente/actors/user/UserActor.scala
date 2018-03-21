@@ -16,7 +16,7 @@ object UserActor {
 
 class UserActor(userId: String) extends Actor with ActorLogging{
 
-  val chatsJoined: mutable.SortedMap[String, ActorRef] = mutable.SortedMap[String, ActorRef]()
+  val chatsJoined: mutable.SortedMap[String, String] = mutable.SortedMap[String, String]()
 
   override def receive: Receive = {
     case ChatMessage(userName, message, chatName) =>
@@ -29,21 +29,21 @@ class UserActor(userId: String) extends Actor with ActorLogging{
     case NewChat(chatName, chat) =>
       log.info("Create Chat -> {}", chatName)
       chatsJoined += chatName -> chat
-      chat ! JoinChat(userId)
+      context.actorSelection(chat) ! JoinChat(userId)
     case Joined(chatName) =>
       log.info("Join to Chat -> {}", chatName)
-      chatsJoined += chatName -> sender()
+      chatsJoined += chatName -> sender().path.toStringWithoutAddress
     case RefusedChat(chatName, reason) =>
       log.info("Chat {} refused to join for: {}", chatName, reason)
     case NewMessage(message, chatName) =>
       log.info("Sending message from user {} to chat {}", userId, chatName)
       if(chatsJoined.isDefinedAt(chatName)) {
-        chatsJoined(chatName) ! ChatMessage(userId, message, chatName)
+        context.actorSelection(chatsJoined(chatName)) ! ChatMessage(userId, message, chatName)
       } else log.error("User {} is not joined to Chat {}", userId, chatName)
     case JoinToChat(chatName) => log.info("Trying to join chat {}", chatName)
       implicit val timeout: Timeout = Timeout(1 seconds)
       val future = context.parent ? GetChatRef(chatName)
-      Await.result(future.mapTo[ActorRef], timeout.duration) ! JoinChat(userId)
+      context.actorSelection(Await.result(future.mapTo[String], timeout.duration)) ! JoinChat(userId)
     case ChatLeft(chatName) => log.info("Removing chat {} for user {}", chatName, userId)
       chatsJoined remove chatName
     case _ => log.error("Unexpected Message")

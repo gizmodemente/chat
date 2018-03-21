@@ -1,6 +1,7 @@
 package com.gizmodemente
 
 import akka.actor.ActorSystem
+import akka.management.AkkaManagement
 import com.gizmodemente.actors.ChatSupervisor
 import com.gizmodemente.actors.cluster.ClusterListener
 import com.typesafe.config.ConfigFactory
@@ -13,6 +14,9 @@ object ChatApplication {
     val system = ActorSystem("chat-system")
 
     try {
+
+      AkkaManagement(system).start()
+
       startup(Seq("2551", "2552"))
 
       system.actorOf(ChatSupervisor.props() , "chat-supervisor")

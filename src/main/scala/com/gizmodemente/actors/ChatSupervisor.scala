@@ -21,26 +21,30 @@ class ChatSupervisor extends Actor with ActorLogging {
   override def preStart(): Unit = log.info("Chat Application started")
   override def postStop(): Unit = log.info("Chat Application stopped")
 
-  val connectedUsers: mutable.SortedMap[String, ActorRef] = mutable.SortedMap[String, ActorRef]()
-  val activeChats: mutable.SortedMap[String, ActorRef] = mutable.SortedMap[String, ActorRef]()
+  val connectedUsers: mutable.SortedMap[String, String] = mutable.SortedMap[String, String]()
+  val activeChats: mutable.SortedMap[String, String] = mutable.SortedMap[String, String]()
+
+  override def aroundPreStart(): Unit = {
+    log.info("Hello, i'm {} and you cand find me in {}", self.toString(), self.path.toStringWithoutAddress)
+  }
 
   override def receive: Receive = {
     case CreateChat(userId, chatName) => log.info("Creating chat {} by user {}", chatName, userId)
-      activeChats += (chatName -> context.actorOf(ChatActor.props(chatName)))
+      activeChats += (chatName -> context.actorOf(ChatActor.props(chatName)).path.toStringWithoutAddress)
       sender() ! NewChat(chatName, activeChats(chatName))
     case ListChats() => log.info("Listing all chats")
       sender() ! CurrentChats(activeChats.keySet.toList)
     case RemoveChat(chatName) => log.info("Removing chat {}", chatName)
       if(activeChats.isDefinedAt(chatName)) {
         log.info("Chat {} exists and will be removed", chatName)
-        activeChats(chatName) ! PoisonPill
+        context.actorSelection(activeChats(chatName)) ! PoisonPill
         activeChats.remove(chatName)
       } else log.info("Chat {} doesn't exists", chatName)
     case CreateUser(userId) => log.info("Creating user actor for {}", userId)
       val newUser: ActorRef = context.actorOf(UserActor.props(userId), "user-" + generateActorName)
 //      context.actorSelection("user-*") ! ChatMessage("system", "Connected user " + userId, "general")
-      connectedUsers += userId -> newUser
-      sender() ! newUser
+      connectedUsers += userId -> newUser.path.toStringWithoutAddress
+      sender() ! newUser.path.toStringWithoutAddress
     case GetChatRef(chatName) => log.info("Getting chat reference for {}", chatName)
       if(activeChats isDefinedAt chatName)
         sender() ! activeChats(chatName)
@@ -49,9 +53,10 @@ class ChatSupervisor extends Actor with ActorLogging {
       sender() ! connectedUsers.keySet.toList
     case UserLeft(userId) => log.info("User {} disconnect", userId)
       if(connectedUsers.isDefinedAt(userId)) {
-        connectedUsers(userId) ! PoisonPill
+        context.actorSelection(connectedUsers(userId)) ! PoisonPill
         connectedUsers remove userId
       } else log.error("Can't disconnect user {} because is not registered", userId)
+    case _ => log.error("Unexpected Message")
   }
 
   override val supervisorStrategy: OneForOneStrategy =
