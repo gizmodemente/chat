@@ -1,6 +1,6 @@
 package com.gizmodemente.actors.chat
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 import com.gizmodemente.messages.ChatMessages._
 
 import scala.collection.mutable

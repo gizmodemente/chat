@@ -91,6 +91,8 @@ class ChatTest extends TestKit(ActorSystem("chat-spec")) with ImplicitSender wit
 
       for(user <- users)
         supervisor ! UserLeft(user)
+
+      Thread.sleep(1500)
     }
   }
 }

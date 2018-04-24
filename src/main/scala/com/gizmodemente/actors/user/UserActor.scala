@@ -1,6 +1,6 @@
 package com.gizmodemente.actors.user
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.gizmodemente.messages.ChatMessages._
@@ -21,9 +21,9 @@ class UserActor(userId: String) extends Actor with ActorLogging{
   override def receive: Receive = {
     case ChatMessage(userName, message, chatName) =>
       // In first approach only prints message with chat name
-      println(if (chatsJoined.keySet.contains(chatName)) "[" + userId + "] " + chatName
-        else "[" + userId + "] " + "Unknown chat - " + chatName)
-      println("[" + userId + "] " + userName + ": " + message)
+      println(if (chatsJoined.keySet.contains(chatName)) s"[$userId] $chatName"
+        else s"[$userId] Unknown chat - $chatName")
+      println(s"[$userId] $userName : $message")
     case RequestNewChat(chatName) => log.info("Requesting a new chat")
       context.parent ! CreateChat(userId, chatName)
     case NewChat(chatName, chat) =>
